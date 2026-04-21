@@ -1,5 +1,7 @@
+"use client";
 import { useState } from 'react';
 import { Briefcase, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { useSignIn } from "@clerk/nextjs";
 
 interface LoginPageProps {
   onLogin: (email: string, password: string) => boolean;
@@ -8,7 +10,7 @@ interface LoginPageProps {
 
 type Mode = 'login' | 'register';
 
-export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
+export default function LoginForm() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
@@ -17,36 +19,16 @@ export function LoginPage({ onLogin, onRegister }: LoginPageProps) {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { signIn } = useSignIn();
 
   const reset = (m: Mode) => {
     setMode(m); setError('');
     setEmail(''); setName(''); setPassword(''); setConfirm('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (!email.trim() || !email.includes('@')) { setError('Enter a valid email address.'); return; }
-    if (!password) { setError('Enter a password.'); return; }
-
-    if (mode === 'register') {
-      if (!name.trim()) { setError('Enter your name.'); return; }
-      if (password.length < 6) { setError('Password must be at least 6 characters.'); return; }
-      if (password !== confirm) { setError('Passwords do not match.'); return; }
-    }
-
-    setLoading(true);
-    setTimeout(() => {
-      if (mode === 'login') {
-        const ok = onLogin(email.trim(), password);
-        if (!ok) setError('No account found with that email and password.');
-      } else {
-        const ok = onRegister(email.trim(), name.trim(), password);
-        if (!ok) setError('An account with that email already exists.');
-      }
-      setLoading(false);
-    }, 300);
+    await signIn.create({ identifier: email, password });
   };
 
   return (
