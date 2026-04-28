@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# -------------------------
+# Environment variables
+
+.env
+.env.local
+.env.development
+.env.production
+
+# -------------------------
+# Logs
+# -------------------------
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# -------------------------
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage / testing
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript
+*.tsbuildinfo
+
+# Drizzle / migrations (optional depending on setup)
+# If you generate migrations locally but don't want them committed
+drizzle/meta/
+
+# Redis local dumps (if any local dev usage)
+dump.rdb
+
+# IDE / editor
+.vscode/
+.idea/
+
+# Misc
+.tmp/
+.cache/
