@@ -3,6 +3,7 @@ import { z } from 'zod';
 
 import { authMiddleware } from '../../middleware/auth.middleware';
 import { getCurrentResume, saveResume } from './resume.service';
+import { resumeQueue } from '../../lib/queues'
 
 const saveResumeSchema = z.object({
   rawText: z.string().min(1),
@@ -36,6 +37,13 @@ resumeRouter.post(
     }
 
     const id = await saveResume({ userId, rawText: parsed.data.rawText });
+    
+    await resumeQueue.add('parse-resume', {
+      resumeId: id,
+      rawText: parsed.data.rawText,
+    });
+
+    
     res.status(201).json({ id });
   }),
 );

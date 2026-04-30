@@ -45,7 +45,7 @@ export const resumes = pgTable('resumes', {
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
   rawText: text('raw_text').notNull(),
-  //embedding: vector('embedding', { dimensions: 1536 }),
+  embedding: vector('embedding', { dimensions: 1536 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

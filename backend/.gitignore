@@ -52,4 +52,4 @@ dump.rdb
 
 # Misc
 .tmp/
-.cache/
+.cache/.env

@@ -1,13 +1,13 @@
+import './lib/env' 
 import cors from 'cors'; 
-import dotenv from 'dotenv'; 
 import express from 'express'; 
+
 
 import { authRouter } from './modules/auth/auth.routes';
 import { jobsRouter } from './modules/jobs/jobs.routes';
 import { resumeRouter } from './modules/resume/resume.routes';
 import { aiRouter } from './modules/ai/ai.routes';
 
-dotenv.config();
 const app = express();
 
 app.use(
