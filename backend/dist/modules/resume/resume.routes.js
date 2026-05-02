@@ -8,6 +8,7 @@ const express_1 = __importDefault(require("express"));
 const zod_1 = require("zod");
 const auth_middleware_1 = require("../../middleware/auth.middleware");
 const resume_service_1 = require("./resume.service");
+const queues_1 = require("../../lib/queues");
 const saveResumeSchema = zod_1.z.object({
     rawText: zod_1.z.string().min(1),
 });
@@ -30,6 +31,10 @@ exports.resumeRouter.post('/', asyncHandler(async (req, res) => {
         return;
     }
     const id = await (0, resume_service_1.saveResume)({ userId, rawText: parsed.data.rawText });
+    await queues_1.resumeQueue.add('parse-resume', {
+        resumeId: id,
+        rawText: parsed.data.rawText,
+    });
     res.status(201).json({ id });
 }));
 exports.resumeRouter.get('/', asyncHandler(async (req, res) => {

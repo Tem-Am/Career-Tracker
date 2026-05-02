@@ -1,34 +1,66 @@
 "use client";
 import { useState } from 'react';
 import { Briefcase, Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
-import { useSignIn } from "@clerk/nextjs";
-
-interface LoginPageProps {
-  onLogin: (email: string, password: string) => boolean;
-  onRegister: (email: string, name: string, password: string) => boolean;
-}
+import { useRouter } from "next/navigation";
+import { apiFetch } from "@/lib/api";
+import { setAuth } from "@/lib/auth";
 
 type Mode = 'login' | 'register';
 
 export default function LoginForm() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn } = useSignIn();
+  const router = useRouter();
 
   const reset = (m: Mode) => {
     setMode(m); setError('');
-    setEmail(''); setName(''); setPassword(''); setConfirm('');
+    setEmail(''); setPassword(''); setConfirm('');
   };
 
-   const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn.create({ identifier: email, password });
+    setError('');
+    setLoading(true);
+    try {
+      if (!email.trim() || !password) {
+        setError("Email and password are required.");
+        return;
+      }
+      if (mode === "register") {
+        if (password.length < 8) {
+          setError("Password must be at least 8 characters.");
+          return;
+        }
+        if (password !== confirm) {
+          setError("Passwords do not match.");
+          return;
+        }
+        const res = await apiFetch<{ token: string; user: { id: string; email: string } }>(
+          "/api/auth/register",
+          { method: "POST", body: { email, password } },
+        );
+        setAuth(res);
+        router.push("/board");
+        return;
+      }
+
+      const res = await apiFetch<{ token: string; user: { id: string; email: string } }>(
+        "/api/auth/login",
+        { method: "POST", body: { email, password } },
+      );
+      setAuth(res);
+      router.push("/board");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Login failed";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,21 +97,6 @@ export default function LoginForm() {
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              {mode === 'register' && (
-                <div>
-                  <label className="block text-slate-700 mb-1.5" style={{ fontSize: '0.875rem' }}>Full Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={e => { setName(e.target.value); setError(''); }}
-                    placeholder="Jane Smith"
-                    autoComplete="name"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 text-slate-800 transition-colors"
-                    style={{ fontSize: '0.9375rem' }}
-                  />
-                </div>
-              )}
-
               <div>
                 <label className="block text-slate-700 mb-1.5" style={{ fontSize: '0.875rem' }}>Email</label>
                 <input
@@ -101,7 +118,7 @@ export default function LoginForm() {
                     type={showPw ? 'text' : 'password'}
                     value={password}
                     onChange={e => { setPassword(e.target.value); setError(''); }}
-                    placeholder={mode === 'register' ? 'Min. 6 characters' : 'Your password'}
+                    placeholder={mode === 'register' ? 'Min. 8 characters' : 'Your password'}
                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                     className="w-full px-3.5 py-2.5 pr-11 rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 text-slate-800 transition-colors"
                     style={{ fontSize: '0.9375rem' }}
@@ -151,7 +168,7 @@ export default function LoginForm() {
             <div className="mt-5 pt-5 border-t border-slate-100 text-center">
               {mode === 'login' ? (
                 <p className="text-slate-500" style={{ fontSize: '0.875rem' }}>
-                  Don't have an account?{' '}
+                  Don&apos;t have an account?{' '}
                   <button onClick={() => reset('register')} className="text-indigo-600 hover:text-indigo-700 hover:underline transition-colors">
                     Create one
                   </button>
@@ -167,7 +184,7 @@ export default function LoginForm() {
 
               {mode === 'login' && (
                 <p className="text-slate-400 mt-3" style={{ fontSize: '0.8125rem' }}>
-                  Demo: <span className="font-mono">demo@jobtracker.app</span> / <span className="font-mono">demo1234</span>
+                  Uses your backend JWT auth.
                 </p>
               )}
             </div>
@@ -175,7 +192,7 @@ export default function LoginForm() {
         </div>
 
         <p className="text-center text-slate-500 mt-4" style={{ fontSize: '0.8125rem' }}>
-          Data stored locally on this device only.
+          Token is stored locally in your browser.
         </p>
       </div>
     </div>

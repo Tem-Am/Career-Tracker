@@ -4,6 +4,7 @@ import { db } from '../lib/db'
 import { resumes, jobs, aiInsights } from '../lib/schema'
 import { eq } from 'drizzle-orm'
 import { getMatchScore, generateMatchInsight } from '../modules/ai/ai.service'
+import { publishEvent } from '../lib/events'
 
 export const matchWorker = new Worker(
   'ai-matching',
@@ -33,6 +34,12 @@ export const matchWorker = new Worker(
     jobId,
     type: 'match',
     result: insight,
+  })
+
+  await publishEvent({
+    userId,
+    event: 'match-complete',
+    data: { jobId },
   })
 
   console.log(`Match job processed: job=${jobId}, user=${userId}`)

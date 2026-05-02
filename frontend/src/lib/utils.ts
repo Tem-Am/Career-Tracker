@@ -123,14 +123,3 @@ export function getCompanyColor(name: string): string {
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
 }
-
-// ── Activity display ───────────────────────────────────────────────
-import { ActivityType } from '../types';
-
-export const ACTIVITY_CONFIG: Record<ActivityType, { label: string; icon: string }> = {
-  created:       { label: 'Added',           icon: '✦' },
-  status_change: { label: 'Status updated',  icon: '⟳' },
-  note_added:    { label: 'Note added',      icon: '📝' },
-  reminder_set:  { label: 'Reminder set',    icon: '🔔' },
-  updated:       { label: 'Updated',         icon: '✎' },
-};

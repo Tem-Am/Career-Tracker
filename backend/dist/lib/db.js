@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.db = exports.pool = void 0;
+require("./env");
 const node_postgres_1 = require("drizzle-orm/node-postgres");
 const pg_1 = require("pg");
 const schema = __importStar(require("./schema"));
@@ -41,5 +42,5 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
     throw new Error('DATABASE_URL is required');
 }
-exports.pool = new pg_1.Pool({ connectionString });
+exports.pool = new pg_1.Pool({ connectionString, ssl: { rejectUnauthorized: false } });
 exports.db = (0, node_postgres_1.drizzle)(exports.pool, { schema });

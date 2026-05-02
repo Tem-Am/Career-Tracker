@@ -7,6 +7,7 @@ import { authRouter } from './modules/auth/auth.routes';
 import { jobsRouter } from './modules/jobs/jobs.routes';
 import { resumeRouter } from './modules/resume/resume.routes';
 import { aiRouter } from './modules/ai/ai.routes';
+import { addSseClient, getUserIdFromToken, removeSseClient } from './lib/events';
 
 const app = express();
 
@@ -19,6 +20,35 @@ app.use(express.json());
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/events', (req, res) => {
+  const token = typeof req.query.token === 'string' ? req.query.token : '';
+  const userId = token ? getUserIdFromToken(token) : null;
+  if (!userId) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
+
+  res.status(200);
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders();
+
+  addSseClient({ res, userId });
+
+  // Initial hello (helps client detect connection)
+  res.write(`event: ready\ndata: ${JSON.stringify({ ok: true })}\n\n`);
+
+  const heartbeat = setInterval(() => {
+    res.write(`event: ping\ndata: ${JSON.stringify({ t: Date.now() })}\n\n`);
+  }, 25_000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    removeSseClient(userId, res);
+  });
 });
 
 app.use('/api/auth', authRouter); // auth routes for user authentication and registration
