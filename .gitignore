@@ -1,7 +1,7 @@
 # Ignore OS files
 .DS_Store
 Thumbs.db
-.package-lock.josn
+.package-lock.json
 
 # Ignore environment files everywhere
 .env
