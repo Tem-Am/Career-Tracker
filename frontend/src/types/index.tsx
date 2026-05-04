@@ -12,9 +12,9 @@ export interface Job {
   userId: string;
   company: string;
   title: string;
-  description: string;
+  description?: string | null;
   status: JobStatus;
-  source: string | null;
+  source?: string | null;
   createdAt: string;
 }
 

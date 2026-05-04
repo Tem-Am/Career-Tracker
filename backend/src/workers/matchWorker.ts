@@ -10,6 +10,12 @@ export const matchWorker = new Worker(
   'ai-matching',
   async (job) => {
   const { jobId, userId } = job.data
+  const jobRecord = await db.query.jobs.findFirst({ where: eq(jobs.id, jobId) })
+
+  if (!jobRecord?.description) {
+    console.log(`Job ${jobId} has no description — skipping AI match`)
+    return
+  }
 
   // 1. Fetch the resume text
   const resume = await db.query.resumes.findFirst({

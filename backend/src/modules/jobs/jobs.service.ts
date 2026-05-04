@@ -9,9 +9,9 @@ export async function createJob(input: {
   userId: string;
   company: string;
   title: string;
-  description: string;
+  description?: string | null;
   status?: JobStatus;
-  source?: string;
+  source?: string | null;
 }) {
   const inserted = await db
     .insert(jobs)

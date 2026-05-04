@@ -15,9 +15,9 @@ const jobStatusSchema = z.enum(['saved', 'applied', 'interview', 'offer', 'rejec
 const createJobSchema = z.object({
   company: z.string().min(1),
   title: z.string().min(1),
-  description: z.string().min(1),
+  description: z.string().min(1).optional().nullable(),
   status: jobStatusSchema.optional(),
-  source: z.string().min(1).optional(),
+  source: z.string().min(1).optional().nullable(),
 });
 
 const jobIdSchema = z.object({

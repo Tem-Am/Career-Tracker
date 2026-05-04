@@ -1,4 +1,4 @@
-import { customType, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { customType, jsonb, pgTable, text, timestamp, uuid, boolean } from 'drizzle-orm/pg-core';
 
 const vector = customType<{ data: number[]; driverData: string; config: { dimensions: number } }>({
   dataType(config) {
@@ -23,6 +23,8 @@ export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  emailVerified: boolean('email_verified').default(false),
+  verifyToken: text('verify_token'),         // one-time token sent in email
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -33,7 +35,7 @@ export const jobs = pgTable('jobs', {
     .references(() => users.id, { onDelete: 'cascade' }),
   company: text('company').notNull(),
   title: text('title').notNull(),
-  description: text('description').notNull(),
+  description: text('description'),
   status: text('status').notNull().default('saved'),
   source: text('source'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

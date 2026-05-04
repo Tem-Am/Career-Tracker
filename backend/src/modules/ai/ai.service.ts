@@ -72,3 +72,30 @@ export async function generateMatchInsight(
 
   return JSON.parse(response.choices[0].message.content!);
 }
+
+export async function analyzeJob(input: { userId: string; jobDescription: string }) {
+  const resume = await db.query.resumes.findFirst({
+    where: eq(resumes.userId, input.userId),
+    orderBy: (r, { desc }) => [desc(r.createdAt)],
+  });
+
+  if (!resume?.embedding) {
+    throw new Error('No processed resume found. Upload your resume first.');
+  }
+
+  const jobEmbedding = await generateEmbedding(input.jobDescription);
+
+  const result = await db.execute(sql`
+    SELECT 1 - (embedding <=> ${JSON.stringify(jobEmbedding)}::vector) AS score
+    FROM resumes
+    WHERE user_id = ${input.userId}
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+
+  const score = (result.rows[0]?.score as number) ?? 0;
+
+  const insight = await generateMatchInsight(resume.rawText, input.jobDescription, score);
+
+  return insight; // { matchScore, missingSkills, strongMatches, recommendation }
+}
