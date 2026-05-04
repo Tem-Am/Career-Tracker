@@ -24,6 +24,8 @@ exports.users = (0, pg_core_1.pgTable)('users', {
     id: (0, pg_core_1.uuid)('id').primaryKey().defaultRandom(),
     email: (0, pg_core_1.text)('email').notNull().unique(),
     passwordHash: (0, pg_core_1.text)('password_hash').notNull(),
+    emailVerified: (0, pg_core_1.boolean)('email_verified').default(false),
+    verifyToken: (0, pg_core_1.text)('verify_token'), // one-time token sent in email
     createdAt: (0, pg_core_1.timestamp)('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 exports.jobs = (0, pg_core_1.pgTable)('jobs', {
@@ -33,7 +35,7 @@ exports.jobs = (0, pg_core_1.pgTable)('jobs', {
         .references(() => exports.users.id, { onDelete: 'cascade' }),
     company: (0, pg_core_1.text)('company').notNull(),
     title: (0, pg_core_1.text)('title').notNull(),
-    description: (0, pg_core_1.text)('description').notNull(),
+    description: (0, pg_core_1.text)('description'),
     status: (0, pg_core_1.text)('status').notNull().default('saved'),
     source: (0, pg_core_1.text)('source'),
     createdAt: (0, pg_core_1.timestamp)('created_at', { withTimezone: true }).notNull().defaultNow(),

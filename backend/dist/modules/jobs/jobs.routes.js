@@ -12,9 +12,9 @@ const jobStatusSchema = zod_1.z.enum(['saved', 'applied', 'interview', 'offer', 
 const createJobSchema = zod_1.z.object({
     company: zod_1.z.string().min(1),
     title: zod_1.z.string().min(1),
-    description: zod_1.z.string().min(1),
+    description: zod_1.z.string().min(1).optional().nullable(),
     status: jobStatusSchema.optional(),
-    source: zod_1.z.string().min(1).optional(),
+    source: zod_1.z.string().min(1).optional().nullable(),
 });
 const jobIdSchema = zod_1.z.object({
     id: zod_1.z.string().uuid(),

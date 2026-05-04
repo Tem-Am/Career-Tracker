@@ -4,6 +4,7 @@ exports.queueMatchJob = queueMatchJob;
 exports.getInsightsForJob = getInsightsForJob;
 exports.getMatchScore = getMatchScore;
 exports.generateMatchInsight = generateMatchInsight;
+exports.analyzeJob = analyzeJob;
 const db_1 = require("../../lib/db");
 const schema_1 = require("../../lib/schema");
 const drizzle_orm_1 = require("drizzle-orm");
@@ -66,4 +67,24 @@ async function generateMatchInsight(resumeText, jobDescription, score) {
         ],
     });
     return JSON.parse(response.choices[0].message.content);
+}
+async function analyzeJob(input) {
+    const resume = await db_1.db.query.resumes.findFirst({
+        where: (0, drizzle_orm_1.eq)(schema_1.resumes.userId, input.userId),
+        orderBy: (r, { desc }) => [desc(r.createdAt)],
+    });
+    if (!resume?.embedding) {
+        throw new Error('No processed resume found. Upload your resume first.');
+    }
+    const jobEmbedding = await (0, openai_1.generateEmbedding)(input.jobDescription);
+    const result = await db_1.db.execute((0, drizzle_orm_1.sql) `
+    SELECT 1 - (embedding <=> ${JSON.stringify(jobEmbedding)}::vector) AS score
+    FROM resumes
+    WHERE user_id = ${input.userId}
+    ORDER BY created_at DESC
+    LIMIT 1
+  `);
+    const score = result.rows[0]?.score ?? 0;
+    const insight = await generateMatchInsight(resume.rawText, input.jobDescription, score);
+    return insight; // { matchScore, missingSkills, strongMatches, recommendation }
 }

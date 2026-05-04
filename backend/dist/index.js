@@ -6,16 +6,61 @@ Object.defineProperty(exports, "__esModule", { value: true });
 require("./lib/env");
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
+const helmet_1 = __importDefault(require("helmet"));
+const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const auth_routes_1 = require("./modules/auth/auth.routes");
 const jobs_routes_1 = require("./modules/jobs/jobs.routes");
 const resume_routes_1 = require("./modules/resume/resume.routes");
 const ai_routes_1 = require("./modules/ai/ai.routes");
 const events_1 = require("./lib/events");
 const app = (0, express_1.default)();
+app.use((0, helmet_1.default)());
+// ── CORS — env-driven, not hardcoded ────────────────────────────────────────
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000')
+    .split(',')
+    .map((o) => o.trim());
 app.use((0, cors_1.default)({
-    origin: 'http://localhost:3000',
+    origin: (origin, cb) => {
+        // allow server-to-server / curl with no origin header
+        if (!origin || ALLOWED_ORIGINS.includes(origin))
+            return cb(null, true);
+        cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    credentials: true,
 }));
-app.use(express_1.default.json());
+// ── Body parsing with size limits ───────────────────────────────────────────
+// Stops someone POSTing a 50MB JSON blob to burn your CPU
+app.use(express_1.default.json({ limit: '64kb' }));
+app.use(express_1.default.urlencoded({ extended: true, limit: '64kb' }));
+// ── Global rate limit — catch-all safety net ────────────────────────────────
+// Every IP is limited to 200 req / 15 min across the whole API
+app.use((0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: 200,
+    standardHeaders: true, // returns RateLimit-* headers
+    legacyHeaders: false,
+    message: { error: 'Too many requests, slow down.' },
+}));
+// ── Auth route limiter — slow down brute force ──────────────────────────────
+// 10 attempts per IP per 15 min on login/register
+const authLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 15 * 60 * 1000,
+    max: process.env.NODE_ENV === 'production' ? 10 : 100, // relaxed in dev
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many auth attempts, try again later.' },
+});
+// ── Resume route limiter — each upload triggers an OpenAI embedding call ───
+// 10 uploads per IP per hour
+const resumeLimiter = (0, express_rate_limit_1.default)({
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Resume upload limit reached, try again later.' },
+});
+const aiLimiter = (0, express_rate_limit_1.default)({ windowMs: 60 * 1000, max: 5 });
+// Health 
 app.get('/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
@@ -32,7 +77,6 @@ app.get('/events', (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.flushHeaders();
     (0, events_1.addSseClient)({ res, userId });
-    // Initial hello (helps client detect connection)
     res.write(`event: ready\ndata: ${JSON.stringify({ ok: true })}\n\n`);
     const heartbeat = setInterval(() => {
         res.write(`event: ping\ndata: ${JSON.stringify({ t: Date.now() })}\n\n`);
@@ -42,15 +86,19 @@ app.get('/events', (req, res) => {
         (0, events_1.removeSseClient)(userId, res);
     });
 });
-app.use('/api/auth', auth_routes_1.authRouter); // auth routes for user authentication and registration
+app.use('/api/auth', authLimiter, auth_routes_1.authRouter); // auth routes for user authentication and registration
 app.use('/api/jobs', jobs_routes_1.jobsRouter); // jobs routes for job listings and applications
-app.use('/api/resume', resume_routes_1.resumeRouter); // resume routes for resume management and creation
-app.use('/api/ai', ai_routes_1.aiRouter); // ai routes for ai-powered features and integrations
+app.use('/api/resume', resumeLimiter, resume_routes_1.resumeRouter); // resume routes for resume management and creation
+app.use('/api/ai', aiLimiter, ai_routes_1.aiRouter); // ai routes for ai-powered features and integrations
 app.use((req, res) => {
     res.status(404).json({ error: `Not found: ${req.method} ${req.path}` });
 });
 app.use((err, _req, res, _next) => {
-    const message = err instanceof Error ? err.message : 'Internal server error';
+    // Log the real error server-side for debugging
+    console.error('[error]', err);
+    // Only expose the message in development — never in production
+    const isDev = process.env.NODE_ENV !== 'production';
+    const message = isDev && err instanceof Error ? err.message : 'Internal server error';
     res.status(500).json({ error: message });
 });
 const port = process.env.PORT ? Number(process.env.PORT) : 4000;

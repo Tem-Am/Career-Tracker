@@ -6,10 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node src/index.ts",
-    "workers": "ts-node src/workers/index.ts",
+    "workers": "ts-node src/workers/index.js",
     "dev:workers": "ts-node src/workers/index.ts",
     "build": "tsc",
-    "start": "node dist/index.ts"
+    "start": "node dist/index.js"
   },
   "keywords": [],
   "author": "",
