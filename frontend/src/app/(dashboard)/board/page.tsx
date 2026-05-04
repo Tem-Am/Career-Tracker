@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import JobCard from "@/components/jobs/JobCard";
 import JobFormModal from "@/components/jobs/JobFormModal";
-import AnalyzeModal from "@/components/analyze/analyzemodel";
+// import AnalyzeModal from "@/components/analyze/analyzemodel";
 import { Job } from "@/types";
 import { JobStatus } from "@/types";
 import { STATUS_CONFIG } from "@/lib/utils";
