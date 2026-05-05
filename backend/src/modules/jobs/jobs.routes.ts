@@ -17,6 +17,7 @@ const createJobSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1).optional().nullable(),
   status: jobStatusSchema.optional(),
+  visa: z.string().min(1).optional().nullable(),
   source: z.string().min(1).optional().nullable(),
 });
 
@@ -30,6 +31,7 @@ const updateJobSchema = z
     title: z.string().min(1).optional(),
     description: z.string().min(1).optional(),
     status: jobStatusSchema.optional(),
+    visa: z.string().min(1).nullable().optional(),
     source: z.string().min(1).nullable().optional(),
   })
   .strict();

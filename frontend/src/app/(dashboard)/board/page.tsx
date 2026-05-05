@@ -104,7 +104,6 @@ export default function BoardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
 
-
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
@@ -418,7 +417,9 @@ export default function BoardPage() {
           style={{
             maxWidth: "1100px",
             margin: "0 auto",
-            padding: "40px 40px 80px",
+            padding: "40px 24px 80px",  // ← reduce horizontal padding from 40px to 24px
+            boxSizing: "border-box",     // ← add this
+            width: "100%",               // ← add this
           }}
         >
           {/* ── Page heading ── */}
@@ -761,37 +762,43 @@ export default function BoardPage() {
                 className="board-job-grid"
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gridTemplateColumns:"repeat(3, minmax(0, 1fr))",
                   gap: "12px",
+                  alignItems: "stretch",
                 }}
               >
                 {filteredJobs.map((job) => (
-                  <JobCard
+                  <div
                     key={job.id}
-                    job={job}
-                    onClick={() => router.push(`/jobs/${job.id}`)}
-                    isSelected={false}
-                    onStatusChange={(jobId, status) => {
-                      void apiFetch(`/api/jobs/${jobId}`, {
-                        method: "PATCH",
-                        token: token!,
-                        body: { status },
-                      }); 
-                      // optimistically update local state too
-                      setJobs((prev) =>
-                        prev.map((j) =>
-                          j.id === jobId ? { ...j, status } : j,
-                        ),
-                      );
-                    }}
-                    onDelete={(jobId) => {
-                      void apiFetch(`/api/jobs/${jobId}`, {
-                        method: "DELETE",
-                        token: token!,
-                      });
-                      setJobs((prev) => prev.filter((j) => j.id !== jobId));
-                    }}
-                  />
+                    style={{ display: "flex", flexDirection: "column", flex: 1 }}
+                  >
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      onClick={() => router.push(`/jobs/${job.id}`)}
+                      isSelected={false}
+                      onStatusChange={(jobId, status) => {
+                        void apiFetch(`/api/jobs/${jobId}`, {
+                          method: "PATCH",
+                          token: token!,
+                          body: { status },
+                        });
+                        // optimistically update local state too
+                        setJobs((prev) =>
+                          prev.map((j) =>
+                            j.id === jobId ? { ...j, status } : j,
+                          ),
+                        );
+                      }}
+                      onDelete={(jobId) => {
+                        void apiFetch(`/api/jobs/${jobId}`, {
+                          method: "DELETE",
+                          token: token!,
+                        });
+                        setJobs((prev) => prev.filter((j) => j.id !== jobId));
+                      }}
+                    />
+                  </div>
                 ))}
               </div>
             </>
@@ -802,6 +809,7 @@ export default function BoardPage() {
           <JobFormModal
             onClose={() => setShowModal(false)}
             onSubmit={(data) => {
+              console.log("onSubmit called with:", data)
               void onCreateJob(
                 data as unknown as Omit<Job, "id" | "userId" | "createdAt">,
               );

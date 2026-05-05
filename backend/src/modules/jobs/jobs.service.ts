@@ -11,6 +11,7 @@ export async function createJob(input: {
   title: string;
   description?: string | null;
   status?: JobStatus;
+  visa? : string | null;
   source?: string | null;
 }) {
   const inserted = await db
@@ -21,6 +22,7 @@ export async function createJob(input: {
       title: input.title,
       description: input.description,
       status: input.status,
+      visa: input.visa,
       source: input.source,
     })
     .returning();
@@ -48,6 +50,7 @@ export async function updateJobForUser(
     title: string;
     description: string;
     status: JobStatus;
+    visa: string | null;
     source: string | null;
   }>,
 ) {

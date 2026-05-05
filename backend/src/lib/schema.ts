@@ -37,6 +37,7 @@ export const jobs = pgTable('jobs', {
   title: text('title').notNull(),
   description: text('description'),
   status: text('status').notNull().default('saved'),
+  visa: text('visa'),
   source: text('source'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });

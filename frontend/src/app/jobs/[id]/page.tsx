@@ -28,7 +28,6 @@ export default function JobDetailPage() {
   const [resumeError, setResumeError] = useState<string | null>(null);
   const [resumeNotice, setResumeNotice] = useState<string | null>(null);
 
-
   const [editing, setEditing] = useState<
     "title" | "company" | "description" | null
   >(null);
@@ -82,7 +81,9 @@ export default function JobDetailPage() {
       // success — worker is queued, SSE will notify when done
     } catch (e) {
       if (e instanceof ApiError && e.status === 429) {
-        setAnalyzeError("You've used all 5 analyses for today. Come back tomorrow.");
+        setAnalyzeError(
+          "You've used all 5 analyses for today. Come back tomorrow.",
+        );
       } else if (e instanceof ApiError) {
         setAnalyzeError(e.message);
       } else {
@@ -92,7 +93,6 @@ export default function JobDetailPage() {
       setAnalyzing(false);
     }
   };
-  
 
   useEffect(() => {
     clientApi
@@ -277,34 +277,76 @@ export default function JobDetailPage() {
             {/* Job header */}
             {job ? (
               <div>
-                {/* Status badge — unchanged */}
+                {/* Status + Visa badges */}
                 <div
                   style={{
-                    display: "inline-flex",
+                    display: "flex",
                     alignItems: "center",
-                    gap: "6px",
-                    fontSize: "10px",
-                    fontFamily: "'DM Mono', monospace",
-                    color: "#b8820a",
-                    background: "rgba(184,130,10,0.08)",
-                    border: "1px solid rgba(184,130,10,0.22)",
-                    borderRadius: "2px",
-                    padding: "3px 10px",
-                    letterSpacing: "0.12em",
-                    textTransform: "uppercase",
+                    gap: "8px",
                     marginBottom: "14px",
                   }}
                 >
-                  <span
+                  <div
                     style={{
-                      width: 5,
-                      height: 5,
-                      borderRadius: "50%",
-                      background: "#b8820a",
-                      display: "inline-block",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      fontSize: "10px",
+                      fontFamily: "'DM Mono', monospace",
+                      color: "#b8820a",
+                      background: "rgba(184,130,10,0.08)",
+                      border: "1px solid rgba(184,130,10,0.22)",
+                      borderRadius: "2px",
+                      padding: "3px 10px",
+                      letterSpacing: "0.12em",
+                      textTransform: "uppercase",
                     }}
-                  />
-                  {job.status}
+                  >
+                    <span
+                      style={{
+                        width: 5,
+                        height: 5,
+                        borderRadius: "50%",
+                        background: "#b8820a",
+                        display: "inline-block",
+                      }}
+                    />
+                    {job.status}
+                  </div>
+
+                  {job.visa && (
+                    <div
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        fontSize: "10px",
+                        fontFamily: "'DM Mono', monospace",
+                        color: job.visa === "yes" ? "#5a9e7a" : "#c96b6b",
+                        background:
+                          job.visa === "yes"
+                            ? "rgba(90,158,122,0.08)"
+                            : "rgba(201,107,107,0.08)",
+                        border: `1px solid ${job.visa === "yes" ? "rgba(90,158,122,0.22)" : "rgba(201,107,107,0.22)"}`,
+                        borderRadius: "2px",
+                        padding: "3px 10px",
+                        letterSpacing: "0.12em",
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: 5,
+                          height: 5,
+                          borderRadius: "50%",
+                          background:
+                            job.visa === "yes" ? "#5a9e7a" : "#c96b6b",
+                          display: "inline-block",
+                        }}
+                      />
+                      {job.visa === "yes" ? "Visa Needed" : "No Visa"}
+                    </div>
+                  )}
                 </div>
 
                 {/* Editable title */}

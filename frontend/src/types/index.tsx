@@ -15,6 +15,7 @@ export interface Job {
   description?: string | null;
   status: JobStatus;
   source?: string | null;
+  visa?: string | null;
   createdAt: string;
 }
 

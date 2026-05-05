@@ -7,6 +7,7 @@ export interface Job {
   description: string;
   status: JobStatus;
   source?: string;
+  visa?: string;
   createdAt: string;
 }
 
@@ -16,6 +17,7 @@ export interface CreateJobInput {
   description: string;
   status: JobStatus;
   source?: string;
+  visa?: string;
 }
 
 export interface AiInsight {
