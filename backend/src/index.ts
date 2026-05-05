@@ -24,12 +24,11 @@ app.use(
     origin: (origin, cb) => {
       // allow server-to-server / curl with no origin header
       if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true)
-      cb(new Error(`CORS: origin ${origin} not allowed`))
+      cb(null, false)
     },
     credentials: true,
   }),
 )
-app.options('*', cors())
 
 // ── Body parsing with size limits ───────────────────────────────────────────
 // Stops someone POSTing a 50MB JSON blob to burn your CPU
