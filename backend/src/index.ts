@@ -29,7 +29,7 @@ app.use(
     credentials: true,
   }),
 )
-
+app.options('*', cors())
 
 // ── Body parsing with size limits ───────────────────────────────────────────
 // Stops someone POSTing a 50MB JSON blob to burn your CPU
